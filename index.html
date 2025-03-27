@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfitEase - Financial Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        .history {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.history h3 {
+    color: #1e3c72;
+    margin-bottom: 10px;
+}
+
+.error-message {
+    background: #ffe3e3;
+    color: #dc3545;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+        }
+
+        .calc-type {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #1e3c72;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .input-group.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        button {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2a5298;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f0fe;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .result.active {
+            display: block;
+        }
+
+        .result h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            line-height: 1.6;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>ProfitEase</h1>
+        
+        <select class="calc-type" id="calcType">
+            <option value="">Select Calculation Type</option>
+            <option value="profitMargin">Profit Margin</option>
+            <option value="markup">Markup</option>
+            <option value="discount">Discount Calculator</option>
+            <option value="percentageChange">Percentage Change</option>
+            <option value="breakEven">Break-even Point</option>
+        </select>
+
+        <div class="input-group" id="costPriceGroup">
+            <label for="costPrice">Cost Price ($)</label>
+            <input type="number" id="costPrice" step="0.01">
+        </div>
+        <div class="history">
+            <h3>Last 3 Calculations</h3>
+            <ul id="historyList"></ul>
+        </div>
+        <div class="input-group" id="revenueGroup">
+            <label for="revenue">Revenue ($)</label>
+            <input type="number" id="revenue" step="0.01">
+        </div>
+
+        <div class="input-group" id="sellingPriceGroup">
+            <label for="sellingPrice">Selling Price ($)</label>
+            <input type="number" id="sellingPrice" step="0.01">
+        </div>
+
+        <div class="input-group" id="originalPriceGroup">
+            <label for="originalPrice">Original Price ($)</label>
+            <input type="number" id="originalPrice" step="0.01">
+        </div>
+
+        <div class="input-group" id="discountPercentageGroup">
+            <label for="discountPercentage">Discount Percentage (%)</label>
+            <input type="number" id="discountPercentage" step="0.01">
+        </div>
+
+        <div class="input-group" id="oldValueGroup">
+            <label for="oldValue">Old Value ($)</label>
+            <input type="number" id="oldValue" step="0.01">
+        </div>
+
+        <div class="input-group" id="newValueGroup">
+            <label for="newValue">New Value ($)</label>
+            <input type="number" id="newValue" step="0.01">
+        </div>
+
+        <div class="input-group" id="fixedCostsGroup">
+            <label for="fixedCosts">Fixed Costs ($)</label>
+            <input type="number" id="fixedCosts" step="0.01">
+        </div>
+
+        <div class="input-group" id="variableCostsGroup">
+            <label for="variableCosts">Variable Cost per Unit ($)</label>
+            <input type="number" id="variableCosts" step="0.01">
+        </div>
+
+        <button onclick="calculate()">Calculate</button>
+
+        <div class="result" id="result">
+            <h3>Result</h3>
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <script>
+        const calcType = document.getElementById('calcType');
+        const inputGroups = document.querySelectorAll('.input-group');
+        const resultDiv = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+
+        calcType.addEventListener('change', () => {
+            inputGroups.forEach(group => group.classList.remove('active'));
+            resultDiv.classList.remove('active');
+            
+            switch(calcType.value) {
+                case 'profitMargin':
+                    document.getElementById('costPriceGroup').classList.add('active');
+                    document.getElementById('revenueGroup').classList.add('active');
+                    break;
+                case 'markup':
+                    document.getElementById('costPriceGroup').classList.add('active');
+                    document.getElementById('sellingPriceGroup').classList.add('active');
+                    break;
+                case 'discount':
+                    document.getElementById('originalPriceGroup').classList.add('active');
+                    document.getElementById('discountPercentageGroup').classList.add('active');
+                    break;
+                case 'percentageChange':
+                    document.getElementById('oldValueGroup').classList.add('active');
+                    document.getElementById('newValueGroup').classList.add('active');
+                    break;
+                case 'breakEven':
+                    document.getElementById('fixedCostsGroup').classList.add('active');
+                    document.getElementById('costPriceGroup').classList.add('active');
+                    document.getElementById('variableCostsGroup').classList.add('active');
+                    break;
+            }
+        });
+        let history = [];
+
+function updateHistory(result) {
+    history.unshift(result);
+    if (history.length > 3) history.pop();
+    
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = history
+        .map((item, index) => `<li>${index + 1}. ${item}</li>`)
+        .join('');
+}
+        function calculate() {
+            if (!calcType.value) {
+                alert('Please select a calculation type');
+                return;
+            }
+
+            let result;
+            switch(calcType.value) {
+                case 'profitMargin':
+                    const cost = parseFloat(document.getElementById('costPrice').value);
+                    const revenue = parseFloat(document.getElementById('revenue').value);
+                    result = ((revenue - cost) / revenue * 100).toFixed(2) + '% Profit Margin';
+                    break;
+                case 'markup':
+                    const costPrice = parseFloat(document.getElementById('costPrice').value);
+                    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
+                    result = ((sellingPrice - costPrice) / costPrice * 100).toFixed(2) + '% Markup';
+                    break;
+                case 'discount':
+                    const originalPrice = parseFloat(document.getElementById('originalPrice').value);
+                    const discount = parseFloat(document.getElementById('discountPercentage').value);
+                    result = 'Discounted Price: $' + (originalPrice - (originalPrice * discount / 100)).toFixed(2);
+                    break;
+                case 'percentageChange':
+                    const oldValue = parseFloat(document.getElementById('oldValue').value);
+                    const newValue = parseFloat(document.getElementById('newValue').value);
+                    result = ((newValue - oldValue) / oldValue * 100).toFixed(2) + '% Change';
+                    break;
+                case 'breakEven':
+                    const fixedCosts = parseFloat(document.getElementById('fixedCosts').value);
+                    const price = parseFloat(document.getElementById('costPrice').value);
+                    const variableCosts = parseFloat(document.getElementById('variableCosts').value);
+                    result = 'Break-even Point: ' + Math.ceil(fixedCosts / (price - variableCosts)) + ' units';
+                    break;
+            }
+
+            resultText.textContent = result;
+            resultDiv.classList.add('active');
+        }
+        function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.innerHTML = `
+        <p>⚠️ ${message}</p>
+    `;
+    document.querySelector('.calculator').prepend(errorDiv);
+    setTimeout(() => errorDiv.remove(), 3000);
+}
+
+function validateInputs(ids) {
+    let isValid = true;
+    ids.forEach(id => {
+        const input = document.getElementById(id);
+        if (!input.value || isNaN(input.value)) {
+            input.style.borderColor = 'red';
+            isValid = false;
+            showError(`Please fill all required fields correctly`);
+        } else {
+            input.style.borderColor = '#ddd';
+        }
+    });
+    return isValid;
+}
+    </script>
+</body>
+</html>
